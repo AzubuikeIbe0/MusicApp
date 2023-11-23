@@ -1,0 +1,55 @@
+﻿@page "/"
+@using MusicApp.Media
+@inject IMediaService MusicService
+
+<PageTitle>Music App</PageTitle>
+
+<h1>Music App</h1>
+<br />
+
+<div>
+    @if (Media == null)
+    {
+        <p>Loading Media...</p>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Media)
+            {
+                <div class="col-4">
+                    <div class="card">
+                        <img class="card-img-top" src="@item.Images.coverart" alt="Card image cap" />
+                        <div class="card-body">
+                            <h5 class="card-title">@item.Type</h5>
+                            <h6 class="card-subtitle">@item.Title</h6>
+                            <p class="card-text">@item.Subtitle</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@if (!string.IsNullOrEmpty(Error))
+{
+    <p>@Error</p>
+}
+
+@code{
+    public List<MusicItem> Media { get; set; }
+    public string Error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Media = await MusicService.GetMedia();
+        }
+        catch (Exception e)
+        {
+            Error = e.Message;
+        }
+    }
+}
