@@ -48,7 +48,8 @@ namespace MusicApp.Media
                     coverart = track.images.coverart,
                     coverarthq = track.images.coverarthq,
                     joecolor = track.images.joecolor
-                }
+                },
+                MusicUri = track.hub?.actions?.FirstOrDefault(action => action.type == "uri")?.uri
             }).ToList();
 
             return musicItems;
@@ -74,7 +75,8 @@ namespace MusicApp.Media
                     coverart = track.images.coverart,
                     coverarthq = track.images.coverarthq,
                     joecolor = track.images.joecolor
-                }
+                },
+                MusicUri = track.hub?.actions?.FirstOrDefault(action => action.type == "uri")?.uri
             }).ToList();
 
             return mediaItems;
