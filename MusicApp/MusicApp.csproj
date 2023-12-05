@@ -20,7 +20,4 @@
   <ItemGroup>
     <None Remove="Media\" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Media\" />
-  </ItemGroup>
 </Project>
