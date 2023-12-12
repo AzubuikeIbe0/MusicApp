@@ -10,10 +10,13 @@ namespace MusicApp.Media
     public class MusicService : IMediaService
     {
         private readonly HttpClient _httpClient;
-        const string _baseUrl = "https://shazam.p.rapidapi.com";
-        const string _mediaEndpoint = "https://shazam.p.rapidapi.com/charts/track";
-        const string _host = "shazam.p.rapidapi.com";
-        const string _key = "5670401c68msh467aa30dbbb72aep156bfcjsn7f7e8014b596"; 
+        private const string _baseUrl = "https://shazam.p.rapidapi.com";
+        private const string _host = "shazam.p.rapidapi.com";
+        private const string _key = "5670401c68msh467aa30dbbb72aep156bfcjsn7f7e8014b596";
+        const string _artistEndpoint = "https://shazam.p.rapidapi.com/artists/get-top-songs";
+        const string _chartTrackEndpoint = "https://shazam.p.rapidapi.com/charts/track";
+
+        const string _chartListEndpoint = "https://shazam.p.rapidapi.com/charts/list";
 
         public MusicService(HttpClient httpClient)
         {
@@ -28,36 +31,12 @@ namespace MusicApp.Media
             _httpClient.DefaultRequestHeaders.Add("X-RapidAPI-Key", _key);
         }
 
-        public async Task<List<MusicItem>> GetMusicItems()
-        {
-            var res = await _httpClient.GetAsync(_mediaEndpoint);
-            res.EnsureSuccessStatusCode();
+     
 
-            using var stream = await res.Content.ReadAsStreamAsync();
-
-            var dataItems = await JsonSerializer.DeserializeAsync<MediaData>(stream);
-
-            var musicItems = dataItems.tracks.Select(track => new MusicItem
-            {
-                Type = track.type,
-                Title = track.title,
-                Subtitle = track.subtitle,
-                Images = new Images
-                {
-                    background = track.images.background,
-                    coverart = track.images.coverart,
-                    coverarthq = track.images.coverarthq,
-                    joecolor = track.images.joecolor
-                },
-                MusicUri = track.hub?.actions?.FirstOrDefault(action => action.type == "uri")?.uri
-            }).ToList();
-
-            return musicItems;
-        }
 
         public async Task<List<MusicItem>> GetMedia()
         {
-            var res = await _httpClient.GetAsync(_mediaEndpoint); 
+            var res = await _httpClient.GetAsync(_chartTrackEndpoint);
             res.EnsureSuccessStatusCode();
 
             using var stream = await res.Content.ReadAsStreamAsync();
@@ -80,6 +59,53 @@ namespace MusicApp.Media
             }).ToList();
 
             return mediaItems;
+        }
+
+
+
+
+      
+        //  public async Task<List<ArtistDetail>> GetArtistTopSongs()
+        // {
+        //     var res = await _httpClient.GetAsync(_artistEndpoint);
+        //     res.EnsureSuccessStatusCode();
+
+        //     using var stream = await res.Content.ReadAsStreamAsync();
+
+        //     var artistTopSongs = await JsonSerializer.DeserializeAsync<ArtistDetail.HintClass>(stream);
+
+        //     var topSongs = artistTopSongs.Hints.Select(hint => new ArtistDetail
+        //     {
+        //         Term = hint.Term,
+        //     }).ToList();
+
+        //     return topSongs;
+        // }
+
+
+        public async Task<ChartList> GetChartList()
+        {
+        
+
+            var res = await _httpClient.GetAsync(_chartListEndpoint);
+            res.EnsureSuccessStatusCode();
+
+            using var stream = await res.Content.ReadAsStreamAsync();
+
+            var chartList = await JsonSerializer.DeserializeAsync<ChartList>(stream);
+
+            // var mediaItems = chartList.global.Select(global => new ChartList
+            // {
+
+            //     Id = global.genres.id,
+            //     ListId = global.genres.listid,
+            //     Name = global.genres.name,
+            //     UrlPath = global.genres.urlPath,
+            //     Count = global.genres.count,
+            // }).ToList();
+
+            return chartList;
+
         }
     }
 }

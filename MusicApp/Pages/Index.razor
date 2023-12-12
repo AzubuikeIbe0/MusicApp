@@ -20,7 +20,7 @@
     </div>
     <ul class="menu">
         <li class="menu-item">Home</li>
-        <li class="menu-item">Trending</li>
+        <li class="menu-item"><a href="/chartlist">Chart</a></li>
         <li class="menu-item">Genres</li>
         <li class="menu-item">Playlists</li>
         <li class="menu-item">Search</li>
@@ -68,7 +68,7 @@
                                 @* <tr @onmouseover="@(() => ShowPlayButton(item))" @onmouseout="@(() => HidePlayButton())"> *@
                                     <tr class="table-rows">
                                     <td class="td-style">@(i + 1)</td>
-                                    <td class="img-holder"><img class="table-img" src="@item.Images.coverart" alt="Card image cap" /></td>
+                                    <td class="img-holder"><img class="table-img" src="@item.Images.coverart" alt="Card image cap" @onclick="@(() => OpenImagePopup(item.Images.coverart))" /></td>
                                     <td class="td-style"> <span class="capitalized">@TruncateByLetters(item.Type, 15)</span></td>
                                     <td class="td-style">@TruncateByLetters(item.Title, 15)</td>
                                     <td class="play-img"><img src="images/play.svg" alt="play" @onclick="@(() => OpenMediaPlayer(item))" /></td>
@@ -170,6 +170,59 @@
         }
     </div>
 
+<br />
+    <br />
+
+    <h5>Chart List</h5>
+<div>
+    @if (ChartListData == null)
+    {
+        <p>Loading Chart List...</p>
+    }
+    else
+    {
+        <div class="chart-list__container">
+            @foreach (var country in ChartListData.countries.Take(1))
+            {
+                <h6>@country.name</h6>
+                <ul>
+                    @foreach (var city in country.cities.Take(7))
+                    {
+                        <li>@city.name</li>
+                    }
+                </ul>
+            }
+        </div>
+        <div>
+            <input type="button" id="prev" value="Previous">
+            <input type="button" id="next" value="Next">
+        </div>
+    }
+</div>
+
+
+    @* <h5>h5>Artist Top Songs</h5>
+<div>
+    @if (Media == null)
+    {
+        <p>Loading Artist Top Songs...</p>
+    }
+    else
+    {
+        <div class="artist-top-songs__container">
+            @foreach (var item in ArtistTopSongs)
+            {
+                @foreach (var hint in item.hints)
+                {
+                    <p>@hint.term</p>
+                }
+            }
+        </div>
+    }
+</div> *@
+
+
+
 
    
 @*
@@ -233,8 +286,17 @@
     <p>@Error</p>
 }
 
+<!-- Image Modal -->
+<div id="imagePopup" class="modal" style="@($"display: {popupDisplay};")">
+    <span class="close" @onclick="ClosePopup">&times;</span>
+    <img id="popupImage" alt="Popup Image" src="@popupImageSource" />
+</div>
+
+
 @code {
     public List<MusicItem> Media { get; set; }
+    @* private List<ArtistDetail> ArtistTopSongs{get; set; }; *@
+    public ChartList ChartListData { get; set; }
     public IOrderedEnumerable<MusicItem> MediaTable { get; set; }
     private bool sortAscending = true;
     private string sortColumn = "Title";
@@ -262,6 +324,8 @@
         try
         {
             Media = await MusicService.GetMedia();
+            ChartListData = await MusicService.GetChartList(); 
+            // ArtistTopSongs = await MusicService.GetArtistTopSongs(); 
         }
         catch (Exception e)
         {
@@ -318,6 +382,37 @@
     private void HidePlayButton()
     {
         showPlayButton = false;
+    }
+
+    private string popupDisplay = "none";
+    private string popupImageSource = string.Empty;
+
+    private void OpenImagePopup(string imageUrl)
+    {
+        popupImageSource = imageUrl;
+        popupDisplay = "block";
+        StateHasChanged();
+    }
+
+    private void ClosePopup()
+    {
+        popupDisplay = "none";
+        StateHasChanged();
+    }
+
+    // Pagination
+    private int PageSize = 7;
+    private int CurrentPage = 1;
+
+    private IEnumerable<Country> DisplayCountries =>
+        ChartListData.countries.Skip((CurrentPage - 1) * PageSize).Take(PageSize);
+
+    private int TotalPages =>
+        (int)Math.Ceiling((double)ChartListData.countries.Length / PageSize);
+
+    private void ChangePage(int page)
+    {
+        CurrentPage = page;
     }
 
 
@@ -402,6 +497,7 @@
         backdrop-filter: blur(5px);
         -webkit-backdrop-filter: blur(5px);
         border: 1px solid rgba(255, 255, 255, 0.3);
+        background: linear-gradient(to top right, #957dee, #c654c7, #edb669); 
     }
 
     .close {
@@ -711,6 +807,39 @@ background: rgba(255, 255, 255, 0.2);
     border-radius: 32px;
     background: linear-gradient(to top right, #957dee, #c654c7, #edb669);
 }
+
+#imagePopup {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 50px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    #imagePopup {
+        width: 800px;
+        height: auto;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .close {
+        color: white;
+        font-size: 24px;
+        font-weight: 700;
+        position: absolute;
+        top: 50px;
+        right: 50px;
+        cursor: pointer;
+    }
 
 
 </style>
