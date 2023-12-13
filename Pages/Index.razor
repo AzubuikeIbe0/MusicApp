@@ -1,0 +1,779 @@
+﻿@page "/"
+@using MusicApp.Media
+@inject IMediaService MusicService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Collections;
+@using System.Collections.Generic;
+@using System.Linq;
+
+
+
+<PageTitle>Music App</PageTitle>
+
+
+<div class="main-content">
+
+    <div class="header">
+    <div class="logo-holder">
+        <img class="logo" src="/images/tone.svg" alt="0">
+    </div>
+    <ul class="menu">
+        <li class="menu-item">Home</li>
+        <li class="menu-item"><a href="/chartlist">Chart</a></li>
+        <li class="menu-item">Genres</li>
+        <li class="menu-item">Playlists</li>
+        <li class="menu-item">Search</li>
+    </ul>
+
+    <Search />
+</div>
+
+
+    <br />
+    <br />
+
+   
+
+    <div class="mediatable">
+
+        @if (Media == null)
+        {
+            <p>Loading Media...</p>
+        }
+        else
+        {
+            <div class="table-holder">
+                <div class="table-container">
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                
+                                @foreach (var header in new string[] {"#", "Image", "Type", "Title", "Action", "Subtitle", "view"})
+                                {
+                                    <th class="table-header"
+                                        
+                                        > 
+                                        @header
+                                    </th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            @for (int i = 0; i < 10; i++)
+                            {
+                                var item = Media[i];
+                                @* <tr @onmouseover="@(() => ShowPlayButton(item))" @onmouseout="@(() => HidePlayButton())"> *@
+                                    <tr class="table-rows">
+                                    <td class="td-style">@(i + 1)</td>
+                                    <td class="img-holder"><img class="table-img" src="@item.Images.coverart" alt="Card image cap" @onclick="@(() => OpenImagePopup(item.Images.coverart))" /></td>
+                                    <td class="td-style"> <span class="capitalized">@TruncateByLetters(item.Type, 15)</span></td>
+                                    <td class="td-style">@TruncateByLetters(item.Title, 15)</td>
+                                    <td class="play-img"><img src="images/play.svg" alt="play" @onclick="@(() => OpenMediaPlayer(item))" /></td>
+                                    <td class="td-style">@TruncateByLetters(item.Subtitle, 15)</td>
+                                    <td class="td-style"><a href="@item.MusicUri" target="_blank">Open</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+
+    <br />
+
+
+    <br />
+ 
+    
+    <br />
+    <br />
+
+    <h5>Trending Songs</h5>
+    <div>
+        @if (Media == null)
+        {
+            <p>Loading Trending Songs...</p>
+        }
+        else
+        {
+            <div class="trending__container">
+                @foreach (var item in Media.Take(7))
+                {
+
+                    <div class="item__body">
+                        <img class="card-img-top" src="@item.Images.coverart" alt="Card image cap" />
+
+                        <div class="media-details">
+                            <h6 class="card-subtitle">@TruncateByLetters(item.Title, 13)</h6>
+                            <p class="card-text">@TruncateByLetters(item.Subtitle, 15)</p>
+
+                            <div class="play__container">
+                                <a href="#" class="play" @onclick="@(() => OpenMediaPlayer(item))">Play<span><i
+                                            class='bx bx-play'></i></span></a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+   
+   
+   <br />
+    <br />
+
+    <h5>New Songs</h5>
+    <div>
+        @if (Media == null)
+        {
+            <p>Loading Trending Songs...</p>
+        }
+        else
+        {
+            <div class="trending__container">
+                @foreach (var item in Media.Take(7))
+                {
+
+                    <div class="item__bg">
+                        <img class="card-img" src="@item.Images.coverart" alt="Card image cap" />
+
+                        <div class="media-details">
+                            <h6 class="card-subtitle">@TruncateByLetters(item.Title, 15)</h6>
+                            <p class="card-text">@TruncateByLetters(item.Subtitle, 12)</p>
+
+                            <div class="play__container">
+                                <a href="#" class="play" @onclick="@(() => OpenMediaPlayer(item))">Play<span><i
+                                            class='bx bx-play'></i></span></a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+<br />
+    <br />
+
+    <h5>Chart List</h5>
+<div>
+    @if (ChartListData == null)
+    {
+        <p>Loading Chart List...</p>
+    }
+    else
+    {
+        <div class="chart-list__container">
+            @foreach (var country in ChartListData.countries.Take(1))
+            {
+                <h6>@country.name</h6>
+                <ul>
+                    @foreach (var city in country.cities.Take(7))
+                    {
+                        <li>@city.name</li>
+                    }
+                </ul>
+            }
+        </div>
+        <div>
+            <input type="button" id="prev" value="Previous">
+            <input type="button" id="next" value="Next">
+        </div>
+    }
+</div>
+
+
+    
+    <div class="footer">
+        <p>©Copyright 2023 Azubuike Ibe | All rights reserved!</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Error))
+{
+    <p>@Error</p>
+}
+
+
+@if (SelectedItem != null)
+{
+    <!-- Pop-up player content -->
+    <div class="modal">
+        <div class="modal-content">
+            <span class="close" @onclick="@CloseMediaPlayer">&times;</span>
+
+            <h2 class="modal_title">@SelectedItem.Title</h2>
+            <audio controls autoplay data-autoplay="true"
+                style="background: rgba(255, 255, 255, 0.2); border-radius: 16px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.3);">
+                <source src="@SelectedItem.MusicUri" type="audio/mp4">
+            </audio>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Error))
+{
+    <p>@Error</p>
+}
+
+<!-- Image Modal -->
+<div id="imagePopup" class="modal" style="@($"display: {popupDisplay};")">
+    <span class="close" @onclick="ClosePopup">&times;</span>
+    <img id="popupImage" alt="Popup Image" src="@popupImageSource" />
+</div>
+
+
+@code {
+    public List<MusicItem> Media { get; set; }
+    @* private List<ArtistDetail> ArtistTopSongs{get; set; }; *@
+    public ChartList ChartListData { get; set; }
+    public IOrderedEnumerable<MusicItem> MediaTable { get; set; }
+    private bool sortAscending = true;
+    private string sortColumn = "Title";
+    public string Error { get; set; }
+    private bool showPlayButton = false;
+
+    // Track the selected item for the pop-up player
+    public MusicItem SelectedItem { get; set; }
+
+    // Method to handle item click and open the pop-up player
+    private void OpenMediaPlayer(MusicItem item)
+    {
+        SelectedItem = item;
+    }
+
+    // Method to close the pop-up player
+    private void CloseMediaPlayer()
+    {
+        SelectedItem = null;
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Media = await MusicService.GetMedia();
+            ChartListData = await MusicService.GetChartList(); 
+            // ArtistTopSongs = await MusicService.GetArtistTopSongs(); 
+        }
+        catch (Exception e)
+        {
+            Error = e.Message;
+        }
+    }
+
+    public static string TruncateByLetters(string value, int maxLetters)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+        var noSpaceValue = value.Replace(" ", "");
+        return noSpaceValue.Length <= maxLetters ? value : value.Substring(0, maxLetters) + "...";
+    }
+
+   
+    private void SortTable(string columnName)
+    {
+        if (Media == null || Media.Count == 0)
+        {
+            return;
+        }
+
+        sortAscending = (sortColumn == columnName) ? !sortAscending : true;
+        sortColumn = columnName;
+
+        var orderedMedia = Media.OrderBy(m => m.Title); // default order by title
+
+        switch (columnName.ToLower())
+        {
+            case "type":
+                orderedMedia = Media.OrderBy(m => m.Type);
+                break;
+            case "subtitle":
+                orderedMedia = Media.OrderBy(m => m.Subtitle);
+                break;
+        }
+
+        @* Media = ToggleSort(orderedMedia).ToList(); *@
+
+        StateHasChanged();
+    }
+
+    @* private IOrderedEnumerable<MusicItem> ToggleSort(IOrderedEnumerable<MusicItem> orderedMedia)
+    {
+        return sortAscending ? orderedMedia : orderedMedia.Reverse();
+    } *@
+
+    @* Play button display *@
+    private void ShowPlayButton(MusicItem item)
+    {
+        showPlayButton = true;
+    }
+
+    private void HidePlayButton()
+    {
+        showPlayButton = false;
+    }
+
+    private string popupDisplay = "none";
+    private string popupImageSource = string.Empty;
+
+    private void OpenImagePopup(string imageUrl)
+    {
+        popupImageSource = imageUrl;
+        popupDisplay = "block";
+        StateHasChanged();
+    }
+
+    private void ClosePopup()
+    {
+        popupDisplay = "none";
+        StateHasChanged();
+    }
+
+    // Pagination
+    private int PageSize = 7;
+    private int CurrentPage = 1;
+
+    private IEnumerable<Country> DisplayCountries =>
+        ChartListData.countries.Skip((CurrentPage - 1) * PageSize).Take(PageSize);
+
+    private int TotalPages =>
+        (int)Math.Ceiling((double)ChartListData.countries.Length / PageSize);
+
+    private void ChangePage(int page)
+    {
+        CurrentPage = page;
+    }
+
+
+}
+
+
+<style>
+    
+    body {
+        background: linear-gradient(to top right, #957dee, #c654c7, #edb669); 
+        color: #ffffff; 
+        font-family: "Poppins", sans-serif;
+    }
+
+    .trending__container {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 32px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 10px;
+    }
+
+    .item__body {
+        margin-right: 20px;
+        padding: 5px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 32px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .audio-controls {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 32px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .icon {
+        margin: 0 10px;
+        cursor: pointer;
+    }
+
+    .audio-bar {
+        flex-grow: 1;
+        margin: 0 10px;
+    }
+
+    .modal {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-content {
+        margin: 15% auto;
+        padding: 20px;
+        width: 80%;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 32px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: linear-gradient(to top right, #957dee, #c654c7, #edb669); 
+    }
+
+    .close {
+        color: white !important;
+        font-size: 24px;
+        font-weight: 700;
+        align-self: flex-end;
+        margin-top: -20px;
+        margin-right: -10px;
+        cursor: pointer;
+    }
+
+    .modal_title {
+        color: white !important;
+    }
+
+    .media-player .controls {
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -webkit-box-pack: start;
+        -webkit-box-align: center;
+        align-items: center;
+        background-color: white !important;
+        bottom: 0;
+        display: -webkit-box;
+        display: flex;
+        flex-flow: row nowrap;
+        height: auto;
+        justify-content: flex-start;
+        left: 0;
+        position: absolute;
+        right: 0;
+        z-index: 2147483647;
+    }
+
+    .media-player .volume {
+        -webkit-box-ordinal-group: 8;
+        background: white !important;
+        display: none;
+        order: 7;
+        padding: 0 .625rem;
+        width: 96px;
+    }
+
+    .media-player .info-box {
+        -webkit-box-ordinal-group: 5;
+        background: #ffffff !important;
+        border: none;
+        color: #000000 !important;
+        display: block;
+        flex-shrink: 1;
+        font-size: .6875rem;
+        height: 36px;
+        order: 4;
+        padding: .625rem;
+        position: relative;
+        text-align: center;
+        white-space: nowrap;
+        width: auto;
+        color: #000;
+        background: white;
+    }
+
+    .loop {
+        background: #ffffff !important;
+    }
+
+    /* Header styles */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 50px;
+        color: white;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 32px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .logo-holder {
+        width: 30px !important;
+        height: 30px !important;
+        border-radius: 25px;
+        background: #fb1d5a;
+        font-size: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .logo {
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    .menu {
+        display: flex;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        font-size: 14px;
+    }
+
+    .menu-item {
+        color:#0056b3;
+        margin-right: 20px;
+        cursor: pointer;
+    }
+
+     .menu-item:hover {
+        color: #fb1d5a;
+    }
+
+    /* Main content styles */
+    .main-content {
+        margin-top: 20px;
+    }
+
+    /* Footer styles */
+    .footer {
+        color: #0071c1;
+        font-weight: 300;
+        font-size: 12px;
+        margin: 40px 0 40px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 32px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 20px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .card-img-top {
+        border-radius: 32px !important;
+    }
+
+    .item__body .card-subtitle,
+    .item__bg .card-subtitle {
+        margin-top: 5px;
+        margin-bottom: 0;
+        font-size: 12px;
+        font-weight: 200;
+        font-family: "Poppins", sans-serif;
+    }
+
+    .item__body .card-text,
+    .item__bg .card-text {
+        font-weight: 500;
+        font-size: 12px;
+        margin-bottom: -4px;
+        margin-top: 1px;
+        color: #f52264;
+    }
+
+
+
+    .card-img {
+        border-radius: 100px !important;
+    }
+
+    .item__bg {
+        margin-right: 20px;
+        padding: 15px;
+    }
+
+    .item__bg:hover,
+    .item__bg:active {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 32px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table th, .table td {
+        border: none;
+        text-align: left;
+        padding: 8px;
+    }
+
+    .table-img{
+        width: 30px !important;
+        border-radius: 15px !important;
+    }
+
+.table tbody td {
+  padding: .3rem !important;
+  vertical-align: middle;
+}
+
+.table thead {
+  border-bottom: none !important;
+}
+
+.media-player .controls {
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -webkit-box-pack: start;
+  -webkit-box-align: center;
+  align-items: center;
+  bottom: 0;
+  display: -webkit-box;
+  display: flex;
+  flex-flow: row nowrap;
+  height: auto;
+  justify-content: flex-start;
+  left: 0;
+  position: absolute;
+  right: 0;
+  z-index: 2147483647;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 32px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.sidebar{
+    width: 20vw;
+}
+
+.mediatable{
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 32px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+
+}
+.table-rows {
+background: rgba(255, 255, 255, 0.2);
+  border-radius: 32px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.img-holder{
+    min-width: 30px !important;
+}
+
+.table-header{
+    width: calc(100% / 7);
+    color: #ffffff !important;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 300 !important;
+    font-family: "Poppins", sans-serif;
+}
+
+.td-style{
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 200 !important;
+  text-transform: capitalize !important;
+}
+.capitalized{
+    text-transform: lowercase !important;
+}
+
+.play-icon {
+    display: none;
+    cursor: pointer;
+}
+
+.play {
+    font-size: 11px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.play-icon:hover {
+    display: block;
+    color: #ff0000;
+}
+
+.play-img img{
+    max-width: 30px !important;
+    cursor: pointer;
+}
+
+.table-holder{
+    padding: 50px;
+}
+
+.media-details {
+    padding: 2px;
+}
+.table-container {
+    border-radius: 32px;
+    background: linear-gradient(to top right, #957dee, #c654c7, #edb669);
+}
+
+#imagePopup {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 50px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    #imagePopup {
+        width: 800px;
+        height: auto;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .close {
+        color: white;
+        font-size: 24px;
+        font-weight: 700;
+        position: absolute;
+        top: 50px;
+        right: 50px;
+        cursor: pointer;
+    }
+
+
+</style>
