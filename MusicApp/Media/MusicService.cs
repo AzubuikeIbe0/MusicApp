@@ -65,22 +65,7 @@ namespace MusicApp.Media
 
 
       
-        //  public async Task<List<ArtistDetail>> GetArtistTopSongs()
-        // {
-        //     var res = await _httpClient.GetAsync(_artistEndpoint);
-        //     res.EnsureSuccessStatusCode();
 
-        //     using var stream = await res.Content.ReadAsStreamAsync();
-
-        //     var artistTopSongs = await JsonSerializer.DeserializeAsync<ArtistDetail.HintClass>(stream);
-
-        //     var topSongs = artistTopSongs.Hints.Select(hint => new ArtistDetail
-        //     {
-        //         Term = hint.Term,
-        //     }).ToList();
-
-        //     return topSongs;
-        // }
 
 
         public async Task<ChartList> GetChartList()
@@ -94,18 +79,9 @@ namespace MusicApp.Media
 
             var chartList = await JsonSerializer.DeserializeAsync<ChartList>(stream);
 
-            // var mediaItems = chartList.global.Select(global => new ChartList
-            // {
-
-            //     Id = global.genres.id,
-            //     ListId = global.genres.listid,
-            //     Name = global.genres.name,
-            //     UrlPath = global.genres.urlPath,
-            //     Count = global.genres.count,
-            // }).ToList();
-
             return chartList;
 
-        }
+        }      
+
     }
 }

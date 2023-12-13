@@ -23,10 +23,10 @@
         <li class="menu-item"><a href="/chartlist">Chart</a></li>
         <li class="menu-item">Genres</li>
         <li class="menu-item">Playlists</li>
-        <li class="menu-item">Search</li>
     </ul>
 
-    <Search />
+    <Search Items="Media" Onsearch="UpdateFilteredSongs"/>
+
 </div>
 
 
@@ -295,6 +295,7 @@
 
 @code {
     public List<MusicItem> Media { get; set; }
+    public List<MusicItem> _filteredSongs = new();
     @* private List<ArtistDetail> ArtistTopSongs{get; set; }; *@
     public ChartList ChartListData { get; set; }
     public IOrderedEnumerable<MusicItem> MediaTable { get; set; }
@@ -324,12 +325,26 @@
         try
         {
             Media = await MusicService.GetMedia();
+            _filteredSongs = Media.ToList();
             ChartListData = await MusicService.GetChartList(); 
             // ArtistTopSongs = await MusicService.GetArtistTopSongs(); 
         }
         catch (Exception e)
         {
             Error = e.Message;
+        }
+    }
+
+    public void UpdateFilteredSongs(string queryText)
+    {
+        if(string.IsNullOrEmpty(queryText))
+        {
+            _filteredSongs = Media.ToList();
+        }
+        else
+        {
+            _filteredSongs = Media.Where(m => m.Title.Contains(queryText, StringComparison.OrdinalIgnoreCase) || m.Subtitle.Contains(queryText, StringComparison.OrdinalIgnoreCase)).ToList();
+
         }
     }
 
@@ -672,7 +687,7 @@
 
     .item__bg:hover,
     .item__bg:active {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(227, 219, 219, 0.831);
         border-radius: 32px;
         box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         backdrop-filter: blur(5px);

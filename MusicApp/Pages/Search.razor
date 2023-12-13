@@ -1,40 +1,48 @@
+@typeparam TEntity
 @page "/search"
 @using MusicApp.Media
-@inject SearchService searchService
-
+@* @inject SearchService searchService *@
 
 <div class="searchbar">
-    <input class="search-input" @bind="searchQuery" placeholder="search music" />
-    <button class="search-button" @onclick="PerformSearch"><i class='bx bx-search'></i></button>
+    <input class="search-input" @bind="queryText" placeholder="search music" />
+    <button class="search-button" @onclick=OnSearchClicked><i class='bx bx-search'></i></button>
 </div>
 
 
-@if (searchResults != null)
+
+@* @if (queryText != null)
 {
     <ul>
-    @foreach (var item in searchResults)
+    @foreach (var item in queryText)
         {
             <li>@item.Title - @item.Subtitle</li>
         }
     </ul>
-}
+} *@
 
-@code {
-    private string searchQuery;
-    private List<MusicItem> searchResults;
 
-    private async Task PerformSearch()
+
+
+@code 
+{
+    [Parameter]
+    public List<TEntity> Items {get; set;}
+    
+    [Parameter]
+    public EventCallback<string> OnSearch {get; set;}
+
+    private string queryText;
+
+    private async Task OnSearchClicked()
     {
-        searchResults = await searchService.Search(searchQuery);
-
-       Console.WriteLine($"Search results: {System.Text.Json.JsonSerializer.Serialize(searchResults)}");
+        await OnSearch.InvokeAsync(queryText);
     }
 }
 
 <style>
 
 .searchbar{
-    display: grid;
+    display: block;
 }
 
 .search-input {
