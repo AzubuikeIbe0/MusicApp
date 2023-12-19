@@ -14,7 +14,7 @@
 <div class="main-content">
 <div class="searchbar">
     <input class="search-input" @bind-value="searchText" @bind-value:event="oninput" placeholder="search music" />
-    <button class="search-button" @onclick="PerformSearch"><i class='bx bx-search'></i></button>
+    <button class="search-button" @onclick="PerformSearch" id="search-button"><i class='bx bx-search'></i></button>
 </div>
 
 @if (searchResults != null && searchResults.Any())
@@ -23,7 +23,7 @@
         @foreach (var item in searchResults)
         {
             <li>
-                <a href="javascript:;" @onclick="@(() => OpenMediaPlayer(item))">
+                <a href="javascript:;" @onclick="@(() => OpenMediaPlayer(item))" id="search-result">
                     @item.Title - @item.Subtitle
                 </a>
             </li>

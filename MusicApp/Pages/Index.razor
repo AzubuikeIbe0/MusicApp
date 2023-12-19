@@ -45,15 +45,15 @@
             <div class="table-holder">
                 <div class="table-container">
 
-                    <table class="table">
+                    <table class="table" id="table">
                          <thead>
                               <tr>
                                 <th class="table-header">#</th>
                                 <th class="table-header">Image</th>
                                 <th class="table-header">Type</th>
-                                        <th class="table-header"><button @onclick="SortByTitle">Title</button></th>
+                                        <th class="table-header" id="title"><button @onclick="SortByTitle">Title</button></th>
                                 <th class="table-header">Action</th>
-                                <th class="table-header"><button @onclick="SortBySubtitle">Subtitle</button></th>
+                                <th class="table-header" id="subtitle"><button @onclick="SortBySubtitle">Subtitle</button></th>
                                 <th class="table-header">view</th>
                             </tr>
 
