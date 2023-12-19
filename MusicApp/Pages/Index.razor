@@ -23,10 +23,9 @@
         <li class="menu-item"><a href="/chartlist">Chart</a></li>
         <li class="menu-item">Genres</li>
         <li class="menu-item">Playlists</li>
-        <li class="menu-item">Search</li>
     </ul>
 
-    <Search />
+    <SearchBar />
 </div>
 
 
@@ -47,25 +46,24 @@
                 <div class="table-container">
 
                     <table class="table">
-                        <thead>
-                            <tr>
-                                
-                                @foreach (var header in new string[] {"#", "Image", "Type", "Title", "Action", "Subtitle", "view"})
-                                {
-                                    <th class="table-header"
-                                        
-                                        > 
-                                        @header
-                                    </th>
-                                }
+                         <thead>
+                              <tr>
+                                <th class="table-header">#</th>
+                                <th class="table-header">Image</th>
+                                <th class="table-header">Type</th>
+                                        <th class="table-header"><button @onclick="SortByTitle">Title</button></th>
+                                <th class="table-header">Action</th>
+                                <th class="table-header"><button @onclick="SortBySubtitle">Subtitle</button></th>
+                                <th class="table-header">view</th>
                             </tr>
+
                         </thead>
                         <tbody>
                             
                             @for (int i = 0; i < 10; i++)
                             {
                                 var item = Media[i];
-                                @* <tr @onmouseover="@(() => ShowPlayButton(item))" @onmouseout="@(() => HidePlayButton())"> *@
+                               
                                     <tr class="table-rows">
                                     <td class="td-style">@(i + 1)</td>
                                     <td class="img-holder"><img class="table-img" src="@item.Images.coverart" alt="Card image cap" @onclick="@(() => OpenImagePopup(item.Images.coverart))" /></td>
@@ -87,20 +85,7 @@
 
 
     <br />
-     @* <div class="audio-controls">
-        <div class="audio-bar">
-            <audio data-role="audio-player" data-loop="true" data-autoplay="true"
-                data-love-icon="<box-icon name='heart'></box-icon>"
-                data-dots-icon="<box-icon name='dots-horizontal'></box-icon>"
-                data-loop-icon="<box-icon name='repost'></box-icon>" data-volume=".5"
-                data-mute-icon="<box-icon type='solid' name='volume-mute'></box-icon>"
-                data-rewind-icon="<box-icon name='rewind'></box-icon>"
-                data-play-icon="<box-icon name='play'></box-icon>" data-stop-icon="<box-icon name='stop'></box-icon>"
-                data-fast-forward-icon="<box-icon name='fast-forward'></box-icon>" data-src="file.mp3">
-            </audio>
-        </div>
-
-    </div> *@
+  
 
     
     <br />
@@ -201,59 +186,6 @@
 </div>
 
 
-    @* <h5>h5>Artist Top Songs</h5>
-<div>
-    @if (Media == null)
-    {
-        <p>Loading Artist Top Songs...</p>
-    }
-    else
-    {
-        <div class="artist-top-songs__container">
-            @foreach (var item in ArtistTopSongs)
-            {
-                @foreach (var hint in item.hints)
-                {
-                    <p>@hint.term</p>
-                }
-            }
-        </div>
-    }
-</div> *@
-
-
-
-
-   
-@*
-      <div>
-        @if (Media == null)
-        {
-            <p>Loading Media...</p>
-        }
-        else
-        {
-            <div class="row">
-                @foreach (var item in Media)
-                {
-                    <div class="col-4">
-                        <div class="card">
-                            <img class="card-img-top" src="@item.Images.coverart" alt="Card image cap" />
-                            <div class="card-body">
-                                <h5 class="card-title">@item.Type</h5>
-                                <h6 class="card-subtitle">@item.Title</h6>
-                                <p class="card-text">@item.Subtitle</p>
-                                <a href="@item.MusicUri" target="_blank">Listen to Audio</a>
-                                <a href="#" @onclick="@(() => OpenMediaPlayer(item))">Listen to Audio</a>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-    </div> 
-*@
-    
     <div class="footer">
         <p>©Copyright 2023 Azubuike Ibe | All rights reserved!</p>
     </div>
@@ -325,7 +257,7 @@
         {
             Media = await MusicService.GetMedia();
             ChartListData = await MusicService.GetChartList(); 
-            // ArtistTopSongs = await MusicService.GetArtistTopSongs(); 
+            
         }
         catch (Exception e)
         {
@@ -341,39 +273,17 @@
     }
 
    
-    private void SortTable(string columnName)
+    private void SortByTitle()
     {
-        if (Media == null || Media.Count == 0)
-        {
-            return;
-        }
-
-        sortAscending = (sortColumn == columnName) ? !sortAscending : true;
-        sortColumn = columnName;
-
-        var orderedMedia = Media.OrderBy(m => m.Title); // default order by title
-
-        switch (columnName.ToLower())
-        {
-            case "type":
-                orderedMedia = Media.OrderBy(m => m.Type);
-                break;
-            case "subtitle":
-                orderedMedia = Media.OrderBy(m => m.Subtitle);
-                break;
-        }
-
-        @* Media = ToggleSort(orderedMedia).ToList(); *@
-
-        StateHasChanged();
+        Media = Media.OrderBy(m => m.Title).ToList();
     }
 
-    @* private IOrderedEnumerable<MusicItem> ToggleSort(IOrderedEnumerable<MusicItem> orderedMedia)
+    private void SortBySubtitle()
     {
-        return sortAscending ? orderedMedia : orderedMedia.Reverse();
-    } *@
+        Media = Media.OrderBy(m => m.Subtitle).ToList();
+    }
 
-    @* Play button display *@
+ 
     private void ShowPlayButton(MusicItem item)
     {
         showPlayButton = true;
@@ -840,6 +750,19 @@ background: rgba(255, 255, 255, 0.2);
         right: 50px;
         cursor: pointer;
     }
+
+    button {
+      text-transform: none !important;
+      border: none !important;
+      background: transparent !important;
+      color: white !important;
+    }
+
+    .search-button .bx {
+    font-size: 16px;
+    color: black;
+    }
+    
 
 
 </style>
